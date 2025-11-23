@@ -12,18 +12,47 @@
         rel="stylesheet">
     <style>
         :root {
-            /* Color Palette */
-            --bg-dark: #0f172a;
-            --bg-panel: #1e293b;
-            --bg-input: #334155;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
+            /* Dark theme - shadcn/ui colors */
+            --background: 224 71% 4%;
+            --foreground: 213 31% 91%;
+
+            --muted: 223 47% 11%;
+            --muted-foreground: 215.4 16.3% 56.9%;
+
+            --popover: 224 71% 4%;
+            --popover-foreground: 215 20.2% 65.1%;
+
+            --card: 224 71% 4%;
+            --card-foreground: 213 31% 91%;
+
+            --border: 216 34% 17%;
+            --input: 216 34% 17%;
+
+            --primary: 210 40% 98%;
+            --primary-foreground: 222.2 47.4% 1.2%;
+
+            --secondary: 222.2 47.4% 11.2%;
+            --secondary-foreground: 210 40% 98%;
+
+            --accent: 216 34% 17%;
+            --accent-foreground: 210 40% 98%;
+
+            --destructive: 0 63% 31%;
+            --destructive-foreground: 210 40% 98%;
+
+            --ring: 216 34% 17%;
+            --radius: 0.5rem;
+
+            /* Legacy compatibility */
+            --bg-dark: hsl(var(--background));
+            --bg-panel: hsl(var(--card));
+            --bg-input: hsl(var(--input));
+            --text-primary: hsl(var(--foreground));
+            --text-secondary: hsl(var(--muted-foreground));
+            --border-color: hsl(var(--border));
             --accent-primary: #6366f1;
-            /* Indigo 500 */
             --accent-hover: #4f46e5;
-            /* Indigo 600 */
-            --accent-danger: #ef4444;
-            --border-color: #334155;
+            --accent-danger: hsl(var(--destructive));
 
             /* Spacing */
             --spacing-xs: 4px;
@@ -303,6 +332,7 @@
         .verse-container.side-by-side {
             flex-direction: row;
             gap: var(--spacing-lg);
+            max-width: none; /* Remove width constraint for side-by-side to use full pane width */
         }
 
         .verse-block {
@@ -656,10 +686,25 @@
         .pane-content {
             flex: 1;
             overflow-y: auto;
+            overflow-x: auto;
             padding: var(--spacing-lg);
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
+            background: hsl(var(--background));
+        }
+
+        /* Fix preview/live pane text visibility */
+        .pane-content .verse-text {
+            color: hsl(var(--foreground)) !important;
+        }
+
+        .pane-content .verse-reference {
+            color: hsl(var(--foreground)) !important;
+        }
+
+        .pane-content .verse-version {
+            color: var(--accent-primary) !important;
         }
 
         .go-live-divider {
@@ -735,12 +780,44 @@
         }
 
         [data-theme="light"] {
-            --bg-dark: #f1f5f9;
-            --bg-panel: #ffffff;
-            --bg-input: #e2e8f0;
-            --text-primary: #0f172a;
-            --text-secondary: #64748b;
-            --border-color: #cbd5e1;
+            /* Light theme - shadcn inspired */
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+
+            --popover: 0 0% 100%;
+            --popover-foreground: 222.2 84% 4.9%;
+
+            --primary: 221.2 83.2% 53.3%;
+            --primary-foreground: 210 40% 98%;
+
+            --secondary: 210 40% 96.1%;
+            --secondary-foreground: 222.2 47.4% 11.2%;
+
+            --muted: 210 40% 96.1%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+
+            --accent: 210 40% 96.1%;
+            --accent-foreground: 222.2 47.4% 11.2%;
+
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 210 40% 98%;
+
+            --border: 214.3 31.8% 91.4%;
+            --input: 214.3 31.8% 91.4%;
+            --ring: 221.2 83.2% 53.3%;
+
+            /* Legacy variables */
+            --bg-dark: hsl(var(--background));
+            --bg-panel: hsl(var(--card));
+            --bg-input: hsl(var(--input));
+            --text-primary: hsl(var(--foreground));
+            --text-secondary: hsl(var(--muted-foreground));
+            --border-color: hsl(var(--border));
+            --accent-primary: hsl(var(--primary));
+            --accent-danger: hsl(var(--destructive));
         }
 
         * {

@@ -410,9 +410,6 @@ function displayVerses(parsedRef, versions) {
 
 // Display multiple verses
 function displayMultipleVerses(parsedRefs, versions) {
-    const displayArea = document.getElementById('displayArea');
-    displayArea.innerHTML = '';
-
     const container = document.createElement('div');
     container.className = 'verse-container stacked'; // Always stacked for multiple verses
 
@@ -460,10 +457,27 @@ function displayMultipleVerses(parsedRefs, versions) {
         });
     });
 
-    displayArea.appendChild(container);
+    if (previewMode) {
+        // Preview mode: show in preview pane only
+        const previewArea = document.getElementById('previewArea');
+        previewArea.innerHTML = '';
+        previewArea.appendChild(container.cloneNode(true));
+        previewContent = container.outerHTML;
 
-    // Send to display window
-    sendToDisplay('UPDATE_DISPLAY', { html: container.outerHTML });
+        // Enable Go Live button
+        const goLiveBtn = document.getElementById('goLiveBtn');
+        if (goLiveBtn) {
+            goLiveBtn.disabled = false;
+        }
+    } else {
+        // Direct mode: show in display area and send to display window
+        const displayArea = document.getElementById('displayArea');
+        displayArea.innerHTML = '';
+        displayArea.appendChild(container);
+
+        // Send to display window immediately
+        sendToDisplay('UPDATE_DISPLAY', { html: container.outerHTML });
+    }
 }
 
 // Add verse to history
