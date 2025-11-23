@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiveVerses - Display</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --text-primary: #f8fafc;
+            --accent-primary: #6366f1;
+            --spacing-lg: 24px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            transition: background-color 0.5s ease;
+        }
+
+        #displayArea {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5vw;
+        }
+
+        /* Verse Styles (Must match index.html for consistency) */
+        .verse-container {
+            width: 100%;
+            max-width: 1400px;
+            /* Wider for projection */
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .verse-container.side-by-side {
+            flex-direction: row;
+            gap: 60px;
+        }
+
+        .verse-block {
+            flex: 1;
+            text-align: center;
+        }
+
+        .verse-version {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2em;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.8;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .verse-reference {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .verse-text {
+            font-size: 3.5em;
+            /* Larger base size for projection */
+            line-height: 1.4;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 500;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        /* Status Indicator - Bottom Left */
+        .status-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ef4444;
+            box-shadow: 0 0 10px #ef4444;
+            transition: all 0.3s ease;
+        }
+
+        .status-dot.connected {
+            background: #22c55e;
+            box-shadow: 0 0 10px #22c55e;
+        }
+
+        #statusText {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .verse-container.side-by-side {
+                flex-direction: column;
+            }
+
+            .verse-text {
+                font-size: 2em !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Status Indicator -->
+    <div class="status-indicator">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Waiting for connection...</span>
+    </div>
+
+    <!-- Display Area -->
+    <div class="display-area" id="displayArea">
+        <div class="placeholder-text">
+            Waiting for verses from control window...<br>
+            <small style="color: #444; margin-top: 10px; display: block;">
+                Open the main LiveVerses window to control this display
+            </small>
+        </div>
+    </div>
+
+    <script>
+        // Communication channel
+        const channel = new BroadcastChannel('liveverses_channel');
+        let isConnected = false;
+
+        // Update status
+        function updateStatus(connected) {
+            isConnected = connected;
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+
+            if (connected) {
+                dot.classList.add('connected');
+                text.textContent = 'Connected to control';
+            } else {
+                dot.classList.remove('connected');
+                text.textContent = 'Waiting for connection...';
+            }
+        }
+
+        // Listen for messages from control window
+        channel.onmessage = (event) => {
+            const { type, data } = event.data;
+
+            updateStatus(true);
+
+            switch (type) {
+                case 'UPDATE_DISPLAY':
+                    updateDisplay(data.html);
+                    break;
+                case 'UPDATE_BACKGROUND':
+                    document.getElementById('displayArea').style.backgroundColor = data.color;
+                    break;
+                case 'UPDATE_TEXT_COLOR':
+                    document.querySelectorAll('.verse-text').forEach(el => {
+                        el.style.color = data.color;
+                    });
+                    break;
+                case 'UPDATE_FONT_SIZE':
+                    document.querySelectorAll('.verse-text').forEach(el => {
+                        el.style.fontSize = data.size + 'em';
+                    });
+                    break;
+                case 'CLEAR_DISPLAY':
+                    clearDisplay();
+                    break;
+                case 'PING':
+                    // Respond to ping to confirm we're alive
+                    channel.postMessage({ type: 'PONG' });
+                    break;
+            }
+        };
+
+        // Update display content
+        function updateDisplay(html) {
+            document.getElementById('displayArea').innerHTML = html;
+        }
+
+        // Clear display
+        function clearDisplay() {
+            document.getElementById('displayArea').innerHTML = `
+                <div class="placeholder-text">
+                    Waiting for verses from control window...<br>
+                    <small style="color: #444; margin-top: 10px; display: block;">
+                        Open the main LiveVerses window to control this display
+                    </small>
+                </div>
+            `;
+        }
+
+        // Send ping to announce we're here
+        function sendPing() {
+            channel.postMessage({ type: 'DISPLAY_READY' });
+        }
+
+        // Ping every 2 seconds to check connection
+        setInterval(sendPing, 2000);
+        sendPing();
+
+        // Reset connection status if no messages in 5 seconds
+        let lastMessageTime = Date.now();
+        channel.addEventListener('message', () => {
+            lastMessageTime = Date.now();
+        });
+
+        setInterval(() => {
+            if (Date.now() - lastMessageTime > 5000) {
+                updateStatus(false);
+            }
+        }, 1000);
+
+        console.log('LiveVerses Display Window Ready');
+    </script>
+</body>
+
+</html>

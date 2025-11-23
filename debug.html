@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Bible Lookup</title>
+</head>
+<body>
+    <h1>Debug Bible Lookup</h1>
+    <div id="output" style="white-space: pre-wrap; font-family: monospace;"></div>
+
+    <script>
+        const output = document.getElementById('output');
+
+        function log(msg) {
+            output.textContent += msg + '\n';
+        }
+
+        // Load KJV data
+        fetch('data/kjv.json')
+            .then(r => r.json())
+            .then(kjv => {
+                log('=== KJV Data Loaded ===');
+                log(`Total books: ${kjv.length}`);
+
+                // Find John
+                const john = kjv.find(b => b.name === 'John');
+                if (john) {
+                    log(`\nJohn found!`);
+                    log(`  Name: ${john.name}`);
+                    log(`  Abbrev: ${john.abbrev}`);
+                    log(`  Chapters: ${john.chapters.length}`);
+                    log(`  Chapter 3 verses: ${john.chapters[2].length}`);
+                    log(`  John 3:16: ${john.chapters[2][15].substring(0, 100)}...`);
+                } else {
+                    log('\nERROR: John not found!');
+                }
+
+                // Test the mapping
+                const BOOK_NAMES = {
+                    'john': 'jo',
+                    'jn': 'jo',
+                    'joh': 'jo',
+                    'jhn': 'jo'
+                };
+
+                const userInput = 'john';
+                const mappedAbbrev = BOOK_NAMES[userInput];
+                log(`\n=== Testing Mapping ===`);
+                log(`User typed: "${userInput}"`);
+                log(`Mapped to: "${mappedAbbrev}"`);
+
+                // Try to find by mapped abbreviation
+                const foundByAbbrev = kjv.find(b => b.abbrev === mappedAbbrev);
+                if (foundByAbbrev) {
+                    log(`SUCCESS: Found book with abbrev "${mappedAbbrev}"`);
+                    log(`  Book name: ${foundByAbbrev.name}`);
+                } else {
+                    log(`ERROR: No book found with abbrev "${mappedAbbrev}"`);
+                    log(`\nAll book abbreviations:`);
+                    kjv.forEach(b => log(`  ${b.name}: "${b.abbrev}"`));
+                }
+
+                // Test full lookup
+                log(`\n=== Full Lookup Test ===`);
+                const book = 'jo';
+                const chapter = 3;
+                const verse = 16;
+
+                const bookData = kjv.find(b => b.abbrev === book);
+                if (bookData) {
+                    const chapterData = bookData.chapters[chapter - 1];
+                    if (chapterData) {
+                        const verseText = chapterData[verse - 1];
+                        if (verseText) {
+                            log(`SUCCESS: ${bookData.name} ${chapter}:${verse}`);
+                            log(`Text: ${verseText}`);
+                        } else {
+                            log(`ERROR: Verse ${verse} not found in chapter ${chapter}`);
+                        }
+                    } else {
+                        log(`ERROR: Chapter ${chapter} not found`);
+                    }
+                } else {
+                    log(`ERROR: Book "${book}" not found`);
+                }
+            })
+            .catch(err => {
+                log('ERROR loading Bible data: ' + err);
+            });
+    </script>
+</body>
+</html>

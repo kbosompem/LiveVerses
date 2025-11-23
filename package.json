@@ -1,0 +1,17 @@
+{
+  "name": "liveverses",
+  "version": "1.0.0",
+  "description": "Bible verse projection app with automated testing",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "screenshots": "playwright test --headed"
+  },
+  "keywords": ["bible", "projection", "verses"],
+  "author": "",
+  "license": "Public Domain",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}
