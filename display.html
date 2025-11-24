@@ -34,6 +34,43 @@
             align-items: center;
             overflow: hidden;
             transition: background-color 0.5s ease;
+            position: relative;
+        }
+
+        /* Background layers */
+        #backgroundVideo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -2;
+            display: none;
+        }
+
+        #backgroundImage {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: -2;
+            display: none;
+        }
+
+        #backgroundOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0);
+            z-index: -1;
+            transition: background 0.3s ease;
         }
 
         #displayArea {
@@ -43,6 +80,8 @@
             justify-content: center;
             align-items: center;
             padding: 5vw;
+            position: relative;
+            z-index: 1;
         }
 
         /* Verse Styles (Must match index.html for consistency) */
@@ -97,6 +136,12 @@
             transition: all 0.3s ease;
         }
 
+        .verse-text.enhanced-shadow,
+        .verse-reference.enhanced-shadow,
+        .verse-version.enhanced-shadow {
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.9), 0 0 40px rgba(0, 0, 0, 0.7), 2px 2px 8px rgba(0, 0, 0, 1);
+        }
+
         /* Status Indicator - Bottom Left */
         .status-indicator {
             position: fixed;
@@ -132,6 +177,22 @@
             font-weight: 500;
         }
 
+        /* Video Container Styles */
+        .video-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+
+        .video-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .verse-container.side-by-side {
@@ -146,6 +207,11 @@
 </head>
 
 <body>
+    <!-- Background layers -->
+    <video id="backgroundVideo" loop muted playsinline></video>
+    <div id="backgroundImage"></div>
+    <div id="backgroundOverlay"></div>
+
     <!-- Status Indicator -->
     <div class="status-indicator">
         <div class="status-dot" id="statusDot"></div>
@@ -192,13 +258,34 @@
                 case 'UPDATE_DISPLAY':
                     updateDisplay(data.html);
                     break;
+                case 'UPDATE_DISPLAY_NOTE':
+                    updateDisplay(data.html);
+                    break;
+                case 'UPDATE_DISPLAY_VIDEO':
+                    updateDisplayVideo(data.videoId, data.autoPlay);
+                    break;
                 case 'UPDATE_BACKGROUND':
-                    document.getElementById('displayArea').style.backgroundColor = data.color;
+                    document.body.style.backgroundColor = data.color;
+                    break;
+                case 'UPDATE_BACKGROUND_IMAGE':
+                    updateBackgroundImage(data.url);
+                    break;
+                case 'UPDATE_BACKGROUND_VIDEO':
+                    updateBackgroundVideo(data.url);
+                    break;
+                case 'CLEAR_BACKGROUND_MEDIA':
+                    clearBackgroundMedia();
                     break;
                 case 'UPDATE_TEXT_COLOR':
                     document.querySelectorAll('.verse-text').forEach(el => {
                         el.style.color = data.color;
                     });
+                    break;
+                case 'UPDATE_TEXT_SHADOW':
+                    updateTextShadow(data.enabled);
+                    break;
+                case 'UPDATE_OVERLAY_OPACITY':
+                    updateOverlayOpacity(data.opacity);
                     break;
                 case 'UPDATE_FONT_SIZE':
                     document.querySelectorAll('.verse-text').forEach(el => {
@@ -215,9 +302,92 @@
             }
         };
 
+        // Background image handler
+        function updateBackgroundImage(url) {
+            const bgVideo = document.getElementById('backgroundVideo');
+            const bgImage = document.getElementById('backgroundImage');
+
+            // Hide video, show image
+            bgVideo.style.display = 'none';
+            bgVideo.pause();
+            bgVideo.src = '';
+
+            bgImage.style.backgroundImage = `url('${url}')`;
+            bgImage.style.display = 'block';
+            document.body.style.backgroundColor = 'transparent';
+        }
+
+        // Background video handler
+        function updateBackgroundVideo(url) {
+            const bgVideo = document.getElementById('backgroundVideo');
+            const bgImage = document.getElementById('backgroundImage');
+
+            // Hide image, show video
+            bgImage.style.display = 'none';
+            bgImage.style.backgroundImage = '';
+
+            bgVideo.src = url;
+            bgVideo.style.display = 'block';
+            bgVideo.play().catch(err => {
+                console.error('Video autoplay failed:', err);
+            });
+            document.body.style.backgroundColor = 'transparent';
+        }
+
+        // Clear background media
+        function clearBackgroundMedia() {
+            const bgVideo = document.getElementById('backgroundVideo');
+            const bgImage = document.getElementById('backgroundImage');
+
+            bgVideo.style.display = 'none';
+            bgVideo.pause();
+            bgVideo.src = '';
+
+            bgImage.style.display = 'none';
+            bgImage.style.backgroundImage = '';
+        }
+
+        // Update text shadow
+        function updateTextShadow(enabled) {
+            const elements = document.querySelectorAll('.verse-text, .verse-reference, .verse-version');
+            elements.forEach(el => {
+                if (enabled) {
+                    el.classList.add('enhanced-shadow');
+                } else {
+                    el.classList.remove('enhanced-shadow');
+                }
+            });
+        }
+
+        // Update overlay opacity
+        function updateOverlayOpacity(opacity) {
+            const overlay = document.getElementById('backgroundOverlay');
+            overlay.style.background = `rgba(0, 0, 0, ${opacity / 100})`;
+        }
+
         // Update display content
         function updateDisplay(html) {
             document.getElementById('displayArea').innerHTML = html;
+        }
+
+        // Update display with YouTube video
+        function updateDisplayVideo(videoId, autoPlay = true) {
+            const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?enablejsapi=1&autoplay=${autoPlay ? 1 : 0}&rel=0&modestbranding=1`;
+
+            const videoHtml = `
+                <div class="video-container">
+                    <iframe
+                        width="100%"
+                        height="100%"
+                        src="${embedUrl}"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            `;
+
+            document.getElementById('displayArea').innerHTML = videoHtml;
         }
 
         // Clear display

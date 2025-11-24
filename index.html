@@ -10,6 +10,8 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700&display=swap"
         rel="stylesheet">
+    <!-- Markdown parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <style>
         :root {
             /* Dark theme - shadcn/ui colors */
@@ -632,6 +634,494 @@
             background: #475569;
         }
 
+        /* Agenda Styles */
+        .agenda-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .agenda-select {
+            flex: 1;
+            margin-right: var(--spacing-sm);
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+        }
+
+        .btn-icon {
+            padding: var(--spacing-sm);
+            min-width: auto;
+        }
+
+        .agenda-form {
+            background: var(--bg-input);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--spacing-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .agenda-form input {
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .agenda-items {
+            max-height: 300px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .agenda-item {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            cursor: grab;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .agenda-item:hover {
+            background: #475569;
+            border-color: var(--accent-primary);
+        }
+
+        .agenda-item.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .agenda-item.current,
+        .agenda-item.active {
+            border-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .agenda-icon {
+            font-size: 1.2rem;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .agenda-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .agenda-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .agenda-meta {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .btn-agenda-remove {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .btn-agenda-remove:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-danger);
+        }
+
+        .drag-handle {
+            color: var(--text-secondary);
+            cursor: grab;
+            user-select: none;
+        }
+
+        .agenda-item-content {
+            flex: 1;
+        }
+
+        .agenda-item-type {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--accent-primary);
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .agenda-item-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .agenda-item-actions {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            border-radius: 4px;
+        }
+
+        .btn-small:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--accent-primary);
+        }
+
+        .btn-small.danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-danger);
+        }
+
+        .agenda-navigation {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-md);
+        }
+
+        .agenda-nav-btn {
+            flex: 1;
+        }
+
+        .agenda-empty {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: var(--spacing-lg);
+            font-size: 0.875rem;
+            opacity: 0.6;
+        }
+
+        .agenda-counter {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: var(--spacing-xs);
+        }
+
+        /* Tab Styles */
+        .sidebar-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: var(--spacing-md);
+            gap: var(--spacing-xs);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+            position: relative;
+        }
+
+        .tab-btn.active {
+            color: var(--accent-primary);
+            border-bottom-color: var(--accent-primary);
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: var(--text-primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+
+        /* Notes Styles */
+        .note-editor-container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .note-title-input {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .note-title-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .markdown-editor {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-sm);
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            resize: vertical;
+            min-height: 150px;
+            line-height: 1.5;
+        }
+
+        .markdown-editor:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .markdown-preview {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-sm);
+            min-height: 120px;
+            max-height: 250px;
+            overflow-y: auto;
+            color: var(--text-primary);
+        }
+
+        .markdown-preview h1 {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .markdown-preview h2 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .markdown-preview h3 {
+            font-size: 1.05rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .markdown-preview p {
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+        .markdown-preview ul,
+        .markdown-preview ol {
+            margin-left: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .markdown-preview li {
+            margin-bottom: 0.25rem;
+        }
+        .markdown-preview blockquote {
+            border-left: 3px solid var(--accent-primary);
+            padding-left: 1rem;
+            margin: 0.75rem 0;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+        .markdown-preview code {
+            background: var(--bg-dark);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+        .markdown-preview strong {
+            font-weight: 700;
+        }
+        .markdown-preview em {
+            font-style: italic;
+        }
+
+        .note-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-sm);
+        }
+
+        .saved-notes-list {
+            max-height: 200px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .saved-note-item {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+
+        .saved-note-item:hover {
+            background: #475569;
+            border-color: var(--accent-primary);
+            transform: translateX(2px);
+        }
+
+        .note-item-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        .note-item-preview {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .note-item-actions {
+            display: flex;
+            gap: var(--spacing-xs);
+            margin-top: var(--spacing-xs);
+        }
+
+        .btn-note-action {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .btn-note-action:hover {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .btn-note-action.danger:hover {
+            background: var(--accent-danger);
+            border-color: var(--accent-danger);
+        }
+
+        .note-search {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 0.85rem;
+            width: 100%;
+        }
+
+        .note-search:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .notes-empty {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: var(--spacing-lg);
+            font-size: 0.875rem;
+            opacity: 0.6;
+        }
+
+        /* Note container for display */
+        .note-container {
+            width: 100%;
+            max-width: 900px;
+            text-align: left;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .note-title-display {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-lg);
+            color: var(--text-primary);
+            text-align: center;
+        }
+
+        .note-content-display {
+            font-size: 1.5rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .note-content-display h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .note-content-display h2 {
+            font-size: 2rem;
+            margin-bottom: 0.875rem;
+        }
+        .note-content-display h3 {
+            font-size: 1.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .note-content-display p {
+            margin-bottom: 1rem;
+        }
+        .note-content-display ul,
+        .note-content-display ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+        .note-content-display li {
+            margin-bottom: 0.5rem;
+        }
+        .note-content-display blockquote {
+            border-left: 4px solid var(--accent-primary);
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+            font-style: italic;
+        }
+
         /* Preview Mode - Split View */
         .split-container {
             display: grid;
@@ -854,6 +1344,16 @@
                 <span>Display Disconnected</span>
             </div>
 
+            <!-- Tabs -->
+            <div class="sidebar-tabs">
+                <button class="tab-btn active" onclick="switchTab('verses')">Verses</button>
+                <button class="tab-btn" onclick="switchTab('notes')">Notes</button>
+                <button class="tab-btn" onclick="switchTab('agenda')">Agenda</button>
+                <button class="tab-btn" onclick="switchTab('data')">Data</button>
+            </div>
+
+            <!-- Verses Tab -->
+            <div id="versesTab" class="tab-content active">
             <div class="control-group">
                 <div class="control-label">Verse Lookup</div>
                 <div style="position: relative;">
@@ -864,6 +1364,9 @@
                     <button class="btn btn-primary" onclick="lookupVerse()">Lookup</button>
                     <button class="btn btn-danger" onclick="clearDisplay()">Clear</button>
                 </div>
+                <button class="btn" onclick="addCurrentVerseToAgenda()" style="width: 100%; margin-top: 8px;">
+                    + Add to Agenda
+                </button>
                 <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 8px; opacity: 0.7;">
                     💡 Rapid: "zec 3 5" • Range: "john 3:14-16" • Multi: "john 3:16, gen 1:1" • Arrows navigate
                 </div>
@@ -904,12 +1407,42 @@
                 <div class="control-label">Appearance</div>
                 <div class="settings-grid">
                     <div class="setting-item">
-                        <label>Background</label>
-                        <input type="color" id="bgColor" value="#0f172a" onchange="updateBackground()">
+                        <label>Background Type</label>
+                        <select id="bgType" onchange="updateBackgroundType()" style="width: 100%; padding: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: var(--radius-sm); font-family: inherit;">
+                            <option value="color">Color</option>
+                            <option value="image">Image</option>
+                            <option value="video">Video</option>
+                        </select>
                     </div>
                     <div class="setting-item">
                         <label>Text Color</label>
                         <input type="color" id="textColor" value="#ffffff" onchange="updateTextColor()">
+                    </div>
+                </div>
+                <div class="setting-item" id="bgColorSection" style="margin-top: 12px;">
+                    <label>Background Color</label>
+                    <input type="color" id="bgColor" value="#0f172a" onchange="updateBackground()">
+                </div>
+                <div class="setting-item" id="bgUrlSection" style="margin-top: 12px; display: none;">
+                    <label>Media URL (HTTPS only)</label>
+                    <input type="text" id="bgUrl" placeholder="https://example.com/image.jpg" style="margin-bottom: 8px;">
+                    <button class="btn btn-primary" onclick="applyBackgroundMedia()" style="width: 100%;">Apply</button>
+                    <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">
+                        Images: JPG, PNG, WebP, GIF • Videos: MP4, WebM
+                    </div>
+                </div>
+                <div class="setting-item" style="margin-top: 12px;">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="textShadowToggle" onchange="updateTextShadow()">
+                        <span>Text Shadow (for readability)</span>
+                    </label>
+                </div>
+                <div class="setting-item" style="margin-top: 12px;">
+                    <label>Overlay Opacity: <span id="overlayOpacityValue">0%</span></label>
+                    <input type="range" id="overlayOpacity" min="0" max="80" value="0" step="5"
+                        onchange="updateOverlayOpacity()">
+                    <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">
+                        Darken background for better text contrast
                     </div>
                 </div>
                 <div class="setting-item" style="margin-top: 12px;">
@@ -941,6 +1474,107 @@
                     <div class="history-empty">No history yet</div>
                 </div>
             </div>
+            </div>
+            <!-- End Verses Tab -->
+
+            <!-- Notes Tab -->
+            <div id="notesTab" class="tab-content">
+                <div class="control-group">
+                    <div class="control-label">Note Editor</div>
+                    <div class="note-editor-container">
+                        <input type="text" id="noteTitle" class="note-title-input" placeholder="Note title (e.g., Sunday Announcements)">
+                        <textarea id="noteContent" class="markdown-editor" placeholder="# Welcome!&#10;&#10;Write your notes in **Markdown**:&#10;- Lists work&#10;- *Emphasis* and **bold**&#10;- > Blockquotes too"></textarea>
+                        <div class="control-label" style="margin-top: 8px;">Live Preview</div>
+                        <div id="notePreview" class="markdown-preview">
+                            <p style="opacity: 0.5;">Preview will appear here...</p>
+                        </div>
+                        <div class="note-actions">
+                            <button class="btn btn-primary" onclick="saveNote()">Save Note</button>
+                            <button class="btn" onclick="projectNote()">Project Note</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">Saved Notes</div>
+                    <input type="text" id="noteSearch" class="note-search" placeholder="Search notes..." oninput="filterNotes()">
+                    <div id="savedNotesList" class="saved-notes-list" style="margin-top: 8px;">
+                        <div class="notes-empty">No notes saved yet</div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Notes Tab -->
+
+            <!-- Agenda Tab -->
+            <div id="agendaTab" class="tab-content">
+            <div class="control-group">
+                <div class="control-label">Agenda</div>
+                <div class="agenda-header">
+                    <select id="agendaSelect" class="agenda-select" onchange="loadAgenda()">
+                        <option value="">Select an agenda...</option>
+                    </select>
+                    <button class="btn btn-icon" onclick="showNewAgendaForm()" title="New Agenda">+</button>
+                    <button class="btn btn-icon btn-danger" onclick="deleteCurrentAgenda()" title="Delete Agenda">🗑</button>
+                </div>
+
+                <div id="newAgendaForm" class="agenda-form" style="display: none;">
+                    <input type="text" id="agendaTitleInput" placeholder="Agenda title (e.g., Sunday Service)">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <button class="btn btn-primary" onclick="createAgenda()">Create</button>
+                        <button class="btn" onclick="hideNewAgendaForm()">Cancel</button>
+                    </div>
+                </div>
+
+                <div id="agendaItemsContainer">
+                    <div id="agendaItems" class="agenda-items">
+                        <div class="agenda-empty">No agenda selected</div>
+                    </div>
+                </div>
+
+                <div class="agenda-navigation" id="agendaNavigation" style="display: none;">
+                    <button class="btn agenda-nav-btn" onclick="previousAgendaItem()">← Previous</button>
+                    <button class="btn btn-primary agenda-nav-btn" onclick="projectCurrentAgendaItem()">Project</button>
+                    <button class="btn agenda-nav-btn" onclick="nextAgendaItem()">Next →</button>
+                </div>
+                <div class="agenda-counter" id="agendaCounter"></div>
+            </div>
+            </div>
+            <!-- End Agenda Tab -->
+
+
+            <!-- Data Management Tab -->
+            <div id="dataTab" class="tab-content">
+                <div class="control-group">
+                    <div class="control-label">Data Management</div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+                        <button class="btn btn-primary" onclick="exportAllData()" title="Export all LiveVerses data to a JSON file">
+                            <span style="margin-right: 4px;">📥</span> Export All Data
+                        </button>
+                        
+                        <button class="btn" onclick="importDataFromFile()" title="Import data from a backup file">
+                            <span style="margin-right: 4px;">📤</span> Import from File
+                        </button>
+                        
+                        <button class="btn btn-danger" onclick="clearAllData()" title="Clear all LiveVerses data">
+                            <span style="margin-right: 4px;">🗑</span> Clear All Data
+                        </button>
+                    </div>
+                    
+                    <div style="margin-top: var(--spacing-lg); padding: var(--spacing-md); background: var(--bg-input); border-radius: var(--radius-sm);">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: var(--spacing-sm);">Storage Information</div>
+                        <div id="storageUsage" style="font-size: 0.875rem; color: var(--text-primary); font-weight: 600;">Storage: 0 KB</div>
+                    </div>
+                    
+                    <div style="margin-top: var(--spacing-md); font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">
+                        <strong>Export:</strong> Creates a backup file with all your data<br>
+                        <strong>Import:</strong> Choose to merge or replace existing data<br>
+                        <strong>Clear:</strong> Permanently deletes all stored data
+                    </div>
+                </div>
+            </div>
+            <!-- End Data Management Tab -->
+
         </aside>
 
         <!-- Preview Area -->
