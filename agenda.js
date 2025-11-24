@@ -1,8 +1,8 @@
 // Agenda System for LiveVerses
 // Handles persistent agendas with verses and YouTube videos
 
-// Agenda persistence state
-let savedAgendas = JSON.parse(localStorage.getItem('savedAgendas') || '{}');
+// Agenda persistence state - use consistent key with app.js
+let savedAgendas = JSON.parse(localStorage.getItem('liveverses_agendas') || '{}');
 let currentAgendaName = null;
 
 function initAgendaSystem() {
@@ -43,7 +43,7 @@ function createAgenda() {
 
     // Create new empty agenda
     savedAgendas[title] = [];
-    localStorage.setItem('savedAgendas', JSON.stringify(savedAgendas));
+    localStorage.setItem('liveverses_agendas', JSON.stringify(savedAgendas));
 
     // Update dropdown
     updateAgendaDropdown();
@@ -149,6 +149,17 @@ function updateAgendaItemsDisplay() {
                     <button class="btn-agenda-remove" onclick="removeFromAgenda(event, ${index})" title="Remove">✕</button>
                 </div>
             `;
+        } else if (item.type === 'note') {
+            return `
+                <div class="agenda-item ${isActive ? 'active' : ''}" onclick="selectAgendaItem(${index})">
+                    <div class="agenda-icon">📝</div>
+                    <div class="agenda-content">
+                        <div class="agenda-title">${item.title || 'Note'}</div>
+                        <div class="agenda-meta">Markdown Note</div>
+                    </div>
+                    <button class="btn-agenda-remove" onclick="removeFromAgenda(event, ${index})" title="Remove">✕</button>
+                </div>
+            `;
         }
     }).join('');
 }
@@ -162,6 +173,7 @@ function projectCurrentAgendaItem() {
     if (currentAgendaIndex < 0 || currentAgendaIndex >= currentAgenda.length) {
         // If nothing selected, start from first item
         if (currentAgenda.length > 0) {
+            currentAgendaIndex = 0;
             displayAgendaItem(0);
         } else {
             showError('No items in agenda');
@@ -170,6 +182,32 @@ function projectCurrentAgendaItem() {
     }
 
     displayAgendaItem(currentAgendaIndex);
+}
+
+function displayAgendaItem(index) {
+    if (index < 0 || index >= currentAgenda.length) return;
+
+    currentAgendaIndex = index;
+    const item = currentAgenda[index];
+
+    if (item.type === 'verse') {
+        // Display verse - call functions from app.js
+        if (item.parsedRefs && item.parsedRefs.length === 1) {
+            displayVerses(item.parsedRefs[0].parsed, item.versions);
+        } else if (item.parsedRefs && item.parsedRefs.length > 1) {
+            displayMultipleVerses(item.parsedRefs, item.versions);
+        }
+    } else if (item.type === 'video') {
+        // Display video - call function from app.js
+        displayVideo(item.videoId, item.autoPlay);
+    } else if (item.type === 'note') {
+        // Display note - call function from app.js
+        if (typeof projectNoteContent === 'function') {
+            projectNoteContent(item.title, item.content);
+        }
+    }
+
+    updateAgendaItemsDisplay();
 }
 
 function removeFromAgenda(event, index) {
@@ -187,7 +225,7 @@ function removeFromAgenda(event, index) {
     // Save to localStorage
     if (currentAgendaName) {
         savedAgendas[currentAgendaName] = currentAgenda;
-        localStorage.setItem('savedAgendas', JSON.stringify(savedAgendas));
+        localStorage.setItem('liveverses_agendas', JSON.stringify(savedAgendas));
     }
 
     updateAgendaItemsDisplay();
@@ -204,7 +242,7 @@ function deleteCurrentAgenda() {
     }
 
     delete savedAgendas[currentAgendaName];
-    localStorage.setItem('savedAgendas', JSON.stringify(savedAgendas));
+    localStorage.setItem('liveverses_agendas', JSON.stringify(savedAgendas));
 
     currentAgenda = [];
     currentAgendaIndex = -1;
@@ -262,7 +300,7 @@ function addCurrentVerseToAgenda() {
 
     // Save to localStorage
     savedAgendas[currentAgendaName] = currentAgenda;
-    localStorage.setItem('savedAgendas', JSON.stringify(savedAgendas));
+    localStorage.setItem('liveverses_agendas', JSON.stringify(savedAgendas));
 
     updateAgendaItemsDisplay();
 
@@ -299,10 +337,39 @@ function addCurrentVideoToAgenda() {
 
     // Save to localStorage
     savedAgendas[currentAgendaName] = currentAgenda;
-    localStorage.setItem('savedAgendas', JSON.stringify(savedAgendas));
+    localStorage.setItem('liveverses_agendas', JSON.stringify(savedAgendas));
 
     updateAgendaItemsDisplay();
 
     // Clear input
     document.getElementById('videoInput').value = '';
+}
+
+// Navigation functions
+function nextAgendaItem() {
+    if (currentAgenda.length === 0) {
+        showError('No items in agenda');
+        return;
+    }
+
+    currentAgendaIndex++;
+    if (currentAgendaIndex >= currentAgenda.length) {
+        currentAgendaIndex = currentAgenda.length - 1;
+    }
+
+    updateAgendaItemsDisplay();
+}
+
+function previousAgendaItem() {
+    if (currentAgenda.length === 0) {
+        showError('No items in agenda');
+        return;
+    }
+
+    currentAgendaIndex--;
+    if (currentAgendaIndex < 0) {
+        currentAgendaIndex = 0;
+    }
+
+    updateAgendaItemsDisplay();
 }
