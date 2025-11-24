@@ -2215,7 +2215,9 @@ function updateStorageIndicator() {
 // ========================================
 // NEW MULTI-AGENDA MANAGEMENT SYSTEM
 // ========================================
-
+// NOTE: This section is DISABLED - agenda.js is now the active implementation
+// All agenda functions are now in agenda.js to avoid conflicts
+/*
 // Initialize agenda system
 function initAgendaSystem() {
     loadAgendasFromStorage();
@@ -2672,3 +2674,4 @@ function handleDragEnd(e) {
 // ========================================
 // END NEW MULTI-AGENDA MANAGEMENT SYSTEM
 // ========================================
+*/
